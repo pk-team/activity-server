@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\app.model\App.Model.csproj" />
     <ProjectReference Include="..\app.service\App.Service.csproj" />
+    <ProjectReference Include="..\app.seed\App.Seed.csproj" />
   </ItemGroup>
 
 </Project>
