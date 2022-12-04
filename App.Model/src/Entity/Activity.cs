@@ -5,4 +5,7 @@ public class Activity : Entity {
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset? End { get; set; }
     public int DurationMinutes { get; set; }
+
+    public Invoice? Invoice { get; set;  }
+    public Organization? Customer { get; set;  }
 }
