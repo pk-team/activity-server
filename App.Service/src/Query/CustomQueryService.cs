@@ -10,8 +10,8 @@ public class CustomQueryService {
 
     public async Task<List<ActivityDTO>> GetOverlappingActivities() {
         var result = await (
-            from a in context.Activities where a.Removed == null
-            from b in context.Activities where b.Removed == null
+            from a in context.Activities where a.RemovedAt == null
+            from b in context.Activities where b.RemovedAt == null
             where a.Id != b.Id && a.Start < b.End && a.End > b.Start
             select new ActivityDTO {
                 Id = a.Id,
@@ -19,8 +19,8 @@ public class CustomQueryService {
                 Start = a.Start,
                 End = a.End,
                 DurationMinutes = a.DurationMinutes,
-                CreatedAt = a.Created,
-                RemovedAt = a.Removed
+                CreatedAt = a.CreatedAt,
+                RemovedAt = a.RemovedAt
             }
         ).ToListAsync();
 

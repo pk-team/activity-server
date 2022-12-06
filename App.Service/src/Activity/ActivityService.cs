@@ -22,13 +22,24 @@ public class ActivityService {
             Errors = new List<Error>()
         };
 
-        var activity = new Activity {
-            Id = Guid.NewGuid(),
+        var activity = new Activity{
             Description = input.Description,
             Start = input.Start,
             End = input.End
         };
 
+        var validator = new ActivityValidation();
+        var result = await validator.ValidateAsync(activity);
+
+        if (!result.IsValid) {
+            foreach (var error in result.Errors) {
+                payload.Errors.Add(new Error {
+                    Message = error.ErrorMessage
+                });
+            }
+            return payload;
+        }
+        
         _context.Activities.Add(activity);
         await _context.SaveChangesAsync();
 
@@ -41,16 +52,28 @@ public class ActivityService {
             Errors = new List<Error>()
         };
 
-        var activity = await _context.Activities.FindAsync(input.Id);
+        var validator = new ActivityValidation();
 
+        var activity = await _context.Activities.FirstOrDefaultAsync(t => t.Id == input.Id);
         if (activity == null) {
+            payload.Errors.Add(new Error {
+                Message = "Activity not found"
+            });
+            return payload;
+        }
+
+        var result = await validator.ValidateAsync(activity);
+        payload.Errors = result.Errors.Select(t => new Error {
+            Message = t.ErrorMessage
+        }).ToList();
+
+        if (payload.Errors.Any()) {
             return payload;
         }
 
         activity.Description = input.Description;
         activity.Start = input.Start;
         activity.End = input.End;
-
 
         await _context.SaveChangesAsync();
 
@@ -61,8 +84,8 @@ public class ActivityService {
     public async Task<Activity> DeleteActivityAsync(Guid id) {
         var activity = await _context.Activities.FirstAsync(t => t.Id == id);
 
-        if (activity.Removed == null) {
-            activity.Removed = DateTimeOffset.Now;
+        if (activity.RemovedAt == null) {
+            activity.RemovedAt = DateTimeOffset.Now;
         }
         await _context.SaveChangesAsync();
         return activity;
@@ -70,8 +93,8 @@ public class ActivityService {
     public async Task<Activity> RestoreActivityAsync(Guid id) {
         var activity = await _context.Activities.FirstAsync(t => t.Id == id);
 
-        if (activity.Removed != null) {
-            activity.Removed = null;
+        if (activity.RemovedAt != null) {
+            activity.RemovedAt = null;
         }
         await _context.SaveChangesAsync();
         return activity;

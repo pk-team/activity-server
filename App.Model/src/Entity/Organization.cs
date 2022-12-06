@@ -16,8 +16,6 @@ public class Organization : Entity {
     public string AddressLocal { get; set; } = "";
     public string Phone { get; set; } = "";
     public string TaxID { get; set; } = "";
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset RemovedAt { get; set; }
 
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Activity> Activities { get; set; } = new List<Activity>();
