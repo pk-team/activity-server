@@ -5,16 +5,16 @@ namespace App.Service.Validation;
 
 public class ActivityValidator {
 
-    AppDbContext context;
+    AppDbContext _context;
     public ActivityValidator(AppDbContext context) {
-        this.context = context;
+        this._context = context;
     }
 
     public async Task<List<Error>> ValidateAsync(Activity activity) {
         var errors = new List<Error>();
 
         if (activity.Id != Guid.Empty) {
-            var existing = await context.Activities.FindAsync(activity.Id);
+            var existing = await _context.Activities.FindAsync(activity.Id);
             if (existing == null) {
                 errors.Add(new Error {
                     Message = "Activity not found",
@@ -23,7 +23,7 @@ public class ActivityValidator {
             }
         }
 
-        var propValidator = await new ActivityPropertyValidator().ValidateAsync(activity);
+        var propValidator = await new ActivityPropertyValidator(_context).ValidateAsync(activity);
         if (!propValidator.IsValid) {
             errors.AddRange(propValidator.Errors.Select(t => new Error {
                 Message = t.ErrorMessage,
@@ -33,25 +33,25 @@ public class ActivityValidator {
         // }
 
         // overlapping activities
-        var overlapping = await context.Activities
-            .Where(t => t.Id != activity.Id)
-            .Where(t => t.RemovedAt == null)
-            .Where(t => t.Start < activity.End)
-            .Where(t => t.End > activity.Start)
-            .ToListAsync();
+        // var overlapping = await _context.Activities
+        //     .Where(t => t.Id != activity.Id)
+        //     .Where(t => t.RemovedAt == null)
+        //     .Where(t => t.Start < activity.End)
+        //     .Where(t => t.End > activity.Start)
+        //     .ToListAsync();
 
-        if (overlapping.Any()) {
-            errors.Add(new Error {
-                Message = "Activity overlaps with existing activity",
-                Path = new List<string> { "Start", "End" }
-            });
-        }
+        // if (overlapping.Any()) {
+        //     errors.Add(new Error {
+        //         Message = "Activity overlaps with existing activity",
+        //         Path = new List<string> { "Start", "End" }
+        //     });
+        // }
         return errors;
     }
 }
 
 public class ActivityPropertyValidator : AbstractValidator<Activity> {
-    public ActivityPropertyValidator() {
+    public ActivityPropertyValidator(AppDbContext context) {
 
         RuleFor(t => t.Description)
             .NotEmpty().WithMessage("Description is required")
@@ -64,7 +64,21 @@ public class ActivityPropertyValidator : AbstractValidator<Activity> {
                 return start > DateTime.Now.AddYears(-1);
             }).WithMessage("Start date cannot be more than a year in the past");
 
-        RuleFor(t => new { t.Start, t.End }).Must(k => k.End != null && k.End > k.Start).WithMessage("End date must be greater than start date");
+        RuleFor(t => new { t.Start, t.End }).Must(k => k.End != null && k.End > k.Start)
+            .WithMessage("End date must be greater than start date");
+
+        // overlapping start end    
+        RuleFor(t => new { t.Id, t.Start, t.End }).MustAsync(async (k, cx) => {
+            var overlapping = await context
+                .Activities
+                .Where(t => t.Id != k.Id)
+                .Where(t => t.RemovedAt == null)
+                .Where(t => t.Start < k.End)
+                .Where(t => t.End > k.Start)
+                .ToListAsync();
+            return !overlapping.Any();
+        }).WithMessage("Activity overlaps with existing activity");
+        
 
 
     }

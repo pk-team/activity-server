@@ -51,7 +51,6 @@ public class ActivityService {
     }
 
 
-
     public async Task<Activity> DeleteActivityAsync(Guid id) {
         var activity = await _context.Activities.FirstAsync(t => t.Id == id);
 
