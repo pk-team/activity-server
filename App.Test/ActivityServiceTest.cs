@@ -1,4 +1,6 @@
 
+using App.Seed;
+
 public class ActivityServiceTest : TestBase {
 
     [Fact]
@@ -14,14 +16,16 @@ public class ActivityServiceTest : TestBase {
     }
 
     [Fact]
-    public async Task CanAddActivity() {
+    public async Task Can_Add_Activity() {
         // arr
         var dbContext = GetDbContext();
+        var organization = (await new SeedDataService(dbContext).CreateOrganizations(1)).First();
         var service = new ActivityService(dbContext);
         var input = new SaveActivityInput {
             Description = "Test",
             Start = DateTime.Now,
-            End = DateTime.Now.AddHours(1)
+            End = DateTime.Now.AddHours(1),
+            OrganizationId = organization.Id
         };
         // act
         var result = await service.SaveActivityAsync(input);
@@ -30,25 +34,30 @@ public class ActivityServiceTest : TestBase {
         Assert.Equal(input.Description, result.AddActivity.Description);
         Assert.Equal(input.Start, result.AddActivity.Start);
         Assert.Equal(input.End, result.AddActivity.End);
+        Assert.Equal(input.OrganizationId, result.AddActivity.OrganizationId);
     }
 
     [Fact]
-    public async Task CanUpdateActivity() {
+    public async Task Can_Update_Activity() {
         // arrange
         var dbContext = GetDbContext();
+        var organizations = await new SeedDataService(dbContext).CreateOrganizations(2);
+
         var service = new ActivityService(dbContext);
         var input = new SaveActivityInput {
             Description = "Test",
             Start = DateTime.Now,
-            End = DateTime.Now.AddHours(1)
+            End = DateTime.Now.AddHours(1),
+            OrganizationId = organizations.First().Id
         };
         var result = await service.SaveActivityAsync(input);
         var updateInput = new SaveActivityInput {
             Id = result.AddActivity.Id,
             Description = "Test 2",
             Start = DateTime.Now,
-            End = DateTime.Now.AddHours(2)
-        };
+            End = DateTime.Now.AddHours(2),
+            OrganizationId = organizations.Last().Id
+    };
         // act
         var updateResult = await service.SaveActivityAsync(updateInput);
         // assert
@@ -57,10 +66,11 @@ public class ActivityServiceTest : TestBase {
         Assert.Equal(updateInput.Description, updateResult.AddActivity.Description);
         Assert.Equal(updateInput.Start, updateResult.AddActivity.Start);
         Assert.Equal(updateInput.End, updateResult.AddActivity.End);
+        Assert.Equal(updateInput.OrganizationId, updateResult.AddActivity.OrganizationId);
         // assert duration minutes is correct
         Assert.Equal((int)(updateInput.End - updateInput.Start).Value.TotalMinutes, updateResult.AddActivity.DurationMinutes);
     }
-    
+
     [Fact]
     public async Task Error_If_Activity_Start_End_Overlaps_With_Existing() {
         // arrange
@@ -84,5 +94,58 @@ public class ActivityServiceTest : TestBase {
         Assert.Single(updateResult.Errors);
         Assert.Equal("Activity overlaps with existing activity", updateResult.Errors[0].Message);
 
+    }
+
+    [Fact]
+    public async Task Cannot_Update_Activity_If_ID_Not_Found() {
+        // arrange
+        var dbContext = GetDbContext();
+        var service = new ActivityService(dbContext);
+        var input = new SaveActivityInput {
+            Id = Guid.NewGuid(),
+            Description = "Test",
+            Start = DateTime.Now,
+            End = DateTime.Now.AddHours(1)
+        };
+        // act
+        var result = await service.SaveActivityAsync(input);
+        // assert
+        Assert.NotNull(result.Errors);
+        Assert.Single(result.Errors);
+        Assert.Equal("Activity not found", result.Errors[0].Message);
+    }
+
+    public async Task Error_If_End_Before_Start() {
+        // arrange
+        var dbContext = GetDbContext();
+        var service = new ActivityService(dbContext);
+        var input = new SaveActivityInput {
+            Description = "Test",
+            Start = DateTime.Now,
+            End = DateTime.Now.AddHours(-1)
+        };
+        // act
+        var result = await service.SaveActivityAsync(input);
+        // assert
+        Assert.NotNull(result.Errors);
+        Assert.Single(result.Errors);
+        Assert.Equal("End date must be after start date", result.Errors[0].Message);
+    }    
+
+    [Fact]
+    public async Task Description_Required() {
+        // arrange
+        var dbContext = GetDbContext();
+        var service = new ActivityService(dbContext);
+        var input = new SaveActivityInput {
+            Start = DateTime.Now,
+            End = DateTime.Now.AddHours(1)
+        };
+        // act
+        var result = await service.SaveActivityAsync(input);
+        // assert
+        Assert.NotNull(result.Errors);
+        Assert.Single(result.Errors);
+        Assert.Equal("Description is required", result.Errors[0].Message);
     }
 }

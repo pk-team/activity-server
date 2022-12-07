@@ -6,6 +6,8 @@ public class Activity : Entity {
     public DateTimeOffset? End { get; set; }
     public int DurationMinutes { get; set; }
 
+    public Guid? InvoiceId { get; set;  }
     public Invoice? Invoice { get; set;  }
-    public Organization? Customer { get; set;  }
+    public Guid? OrganizationId { get; set;  }
+    public Organization? Organization { get; set;  }
 }

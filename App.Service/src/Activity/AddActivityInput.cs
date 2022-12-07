@@ -5,6 +5,7 @@ public class SaveActivityInput {
     public string Description { get; set; } = "";
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset? End { get; set; }
+    public Guid? OrganizationId { get; set; }
 
     // to activity
 }

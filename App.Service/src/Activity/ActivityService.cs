@@ -24,15 +24,21 @@ public class ActivityService {
             activity = new Activity();
         }
 
+        activity.Id = input.Id ?? Guid.Empty; // must set to empty 
         activity.Description = input.Description;
         activity.Start = input.Start;
         activity.End = input.End;
+        activity.OrganizationId = input.OrganizationId;
         // duration minutes if end is set
         activity.DurationMinutes = input.End != null ? (int)(input.End - input.Start).Value.TotalMinutes : 0;
 
         var validator = new ActivityValidator(_context);
+        var validationResult = await validator.ValidateAsync(activity);
         var payload = new AddActivityPayload {
-            Errors = await validator.ValidateAsync(activity)
+            Errors = validationResult.Errors.Select(t => new Error {
+                Message = t.ErrorMessage,
+                Path = t.PropertyName.Split('.').ToList()
+            }).ToList()
         };
 
         if (payload.Errors.Any()) {

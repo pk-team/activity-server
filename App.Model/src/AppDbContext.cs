@@ -6,7 +6,7 @@ namespace App.Model;
 
 public class AppDbContext : DbContext {
 
-    public DbSet<Organization> Customes => Set<Organization>();
+    public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Activity> Activities => Set<Activity>();
 
     public AppDbContext(DbContextOptions options) : base(options) {

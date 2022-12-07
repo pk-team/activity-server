@@ -3,60 +3,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace App.Service.Validation;
 
-public class ActivityValidator {
-
-    AppDbContext _context;
+public class ActivityValidator : AbstractValidator<Activity> {
     public ActivityValidator(AppDbContext context) {
-        this._context = context;
-    }
 
-    public async Task<List<Error>> ValidateAsync(Activity activity) {
-        var errors = new List<Error>();
+        // activity not found 
+        RuleFor(t => t.Id)
+            .MustAsync(async (id, cx) => {
+                if (id == Guid.Empty) {
+                    return true;
+                }
+                var found =  await context.Activities.AnyAsync(t => t.Id == id);
+                return found;
+            }).WithMessage("Activity not found");
 
-        if (activity.Id != Guid.Empty) {
-            var existing = await _context.Activities.FindAsync(activity.Id);
-            if (existing == null) {
-                errors.Add(new Error {
-                    Message = "Activity not found",
-                    Path = new List<string> { "Id" }
-                });
-            }
-        }
-
-        var propValidator = await new ActivityPropertyValidator(_context).ValidateAsync(activity);
-        if (!propValidator.IsValid) {
-            errors.AddRange(propValidator.Errors.Select(t => new Error {
-                Message = t.ErrorMessage,
-                Path = new List<string> { t.PropertyName }
-            }));
-        }
-        // }
-
-        // overlapping activities
-        // var overlapping = await _context.Activities
-        //     .Where(t => t.Id != activity.Id)
-        //     .Where(t => t.RemovedAt == null)
-        //     .Where(t => t.Start < activity.End)
-        //     .Where(t => t.End > activity.Start)
-        //     .ToListAsync();
-
-        // if (overlapping.Any()) {
-        //     errors.Add(new Error {
-        //         Message = "Activity overlaps with existing activity",
-        //         Path = new List<string> { "Start", "End" }
-        //     });
-        // }
-        return errors;
-    }
-}
-
-public class ActivityPropertyValidator : AbstractValidator<Activity> {
-    public ActivityPropertyValidator(AppDbContext context) {
-
+        // description required
         RuleFor(t => t.Description)
             .NotEmpty().WithMessage("Description is required")
-            .MaximumLength(50).WithMessage("Description must be less than 50 characters");
+            .MaximumLength(1000).WithMessage("Description must be less than 1000 characters");
 
+        // start date required
         RuleFor(t => t.Start)
             .NotEmpty().WithMessage("Start date is required")
             .MustAsync(async (start, cx) => {
@@ -65,7 +30,7 @@ public class ActivityPropertyValidator : AbstractValidator<Activity> {
             }).WithMessage("Start date cannot be more than a year in the past");
 
         RuleFor(t => new { t.Start, t.End }).Must(k => k.End != null && k.End > k.Start)
-            .WithMessage("End date must be greater than start date");
+            .WithMessage("End date must be after start date");
 
         // overlapping start end    
         RuleFor(t => new { t.Id, t.Start, t.End }).MustAsync(async (k, cx) => {
@@ -78,8 +43,5 @@ public class ActivityPropertyValidator : AbstractValidator<Activity> {
                 .ToListAsync();
             return !overlapping.Any();
         }).WithMessage("Activity overlaps with existing activity");
-        
-
-
     }
 }

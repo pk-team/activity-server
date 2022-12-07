@@ -10,10 +10,11 @@ public class SeedDataService {
 
     public async Task SeedDatabase() {
         // activities
-        await CreateActivities(new CreateActivitiesOption());
+        var organizations = (await CreateOrganizations(1)).First();
+        await CreateActivities(new CreateActivitiesOption(organizations.Id));
     }
 
-    public record CreateActivitiesOption(int durationMinutes = 60, int activitiesPerDay = 2, int days = 5);
+    public record CreateActivitiesOption(Guid organizationId, int durationMinutes = 60, int activitiesPerDay = 2, int days = 5);
     public async Task CreateActivities(CreateActivitiesOption option) {
 
         TimeOnly startTime = new(10, 0);
@@ -31,7 +32,8 @@ public class SeedDataService {
                     Description = $"Activity description {++count}",
                     Start = startDateTime,
                     End = startDateTime.AddMinutes(option.durationMinutes),
-                    DurationMinutes = option.durationMinutes                    
+                    DurationMinutes = option.durationMinutes        ,
+                    OrganizationId = option.organizationId            
                 };
                 context.Activities.Add(activity);
 
@@ -45,4 +47,21 @@ public class SeedDataService {
 
         await context.SaveChangesAsync();
     }
+
+    // create organizations
+    public async Task<List<Organization>> CreateOrganizations(int count = 10) {
+        var organizations = new List<Organization>();
+        for (int i = 0; i < count; i++) {
+            var organization = new Organization {
+                Name = $"Organization {i + 1}",
+                Code = $"Code{i + 1}"
+            };
+            organizations.Add(organization);
+            context.Organizations.Add(organization);
+        }
+
+        await context.SaveChangesAsync();
+        return organizations;
+    }
+    
 }

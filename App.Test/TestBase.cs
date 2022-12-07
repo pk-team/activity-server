@@ -4,7 +4,7 @@ using Microsoft.Data.Sqlite;
 
 public class TestBase {
 
-    public AppDbContext GetDbContext() {
+    public AppDbContext GetDbContext() {        
 
         var connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
