@@ -1,3 +1,4 @@
+using App.Service.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace App.Service;
@@ -17,69 +18,39 @@ public class ActivityService {
         return await _context.Activities.ToListAsync();
     }
 
-    public async Task<AddActivityPayload> AddActivityAsync(AddActivityInput input) {
+    public async Task<AddActivityPayload> SaveActivityAsync(SaveActivityInput input) {
+        var activity = await _context.Activities.FindAsync(input.Id);
+        if (activity == null) {
+            activity = new Activity();
+        }
+
+        activity.Description = input.Description;
+        activity.Start = input.Start;
+        activity.End = input.End;
+        // duration minutes if end is set
+        activity.DurationMinutes = input.End != null ? (int)(input.End - input.Start).Value.TotalMinutes : 0;
+
+        var validator = new ActivityValidator(_context);
         var payload = new AddActivityPayload {
-            Errors = new List<Error>()
+            Errors = await validator.ValidateAsync(activity)
         };
 
-        var activity = new Activity{
-            Description = input.Description,
-            Start = input.Start,
-            End = input.End
-        };
-
-        var validator = new ActivityValidation();
-        var result = await validator.ValidateAsync(activity);
-
-        if (!result.IsValid) {
-            foreach (var error in result.Errors) {
-                payload.Errors.Add(new Error {
-                    Message = error.ErrorMessage
-                });
-            }
+        if (payload.Errors.Any()) {
             return payload;
         }
-        
-        _context.Activities.Add(activity);
+
+        if (input.Id.HasValue && input.Id.Value != Guid.Empty) {
+            _context.Activities.Update(activity);
+        } else {
+            _context.Activities.Add(activity);
+        }
         await _context.SaveChangesAsync();
 
         payload.AddActivity = activity;
         return payload;
     }
 
-    public async Task<UpdateActivityPayload> UpdateActivityAsync(UpdateActivityInput input) {
-        var payload = new UpdateActivityPayload {
-            Errors = new List<Error>()
-        };
 
-        var validator = new ActivityValidation();
-
-        var activity = await _context.Activities.FirstOrDefaultAsync(t => t.Id == input.Id);
-        if (activity == null) {
-            payload.Errors.Add(new Error {
-                Message = "Activity not found"
-            });
-            return payload;
-        }
-
-        var result = await validator.ValidateAsync(activity);
-        payload.Errors = result.Errors.Select(t => new Error {
-            Message = t.ErrorMessage
-        }).ToList();
-
-        if (payload.Errors.Any()) {
-            return payload;
-        }
-
-        activity.Description = input.Description;
-        activity.Start = input.Start;
-        activity.End = input.End;
-
-        await _context.SaveChangesAsync();
-
-        payload.UpdateActivity = activity;
-        return payload;
-    }
 
     public async Task<Activity> DeleteActivityAsync(Guid id) {
         var activity = await _context.Activities.FirstAsync(t => t.Id == id);

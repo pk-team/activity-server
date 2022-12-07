@@ -18,13 +18,13 @@ public class ActivityServiceTest : TestBase {
         // arr
         var dbContext = GetDbContext();
         var service = new ActivityService(dbContext);
-        var input = new AddActivityInput {
+        var input = new SaveActivityInput {
             Description = "Test",
             Start = DateTime.Now,
             End = DateTime.Now.AddHours(1)
         };
         // act
-        var result = await service.AddActivityAsync(input);
+        var result = await service.SaveActivityAsync(input);
         // assert
         Assert.NotNull(result.AddActivity);
         Assert.Equal(input.Description, result.AddActivity.Description);
@@ -37,26 +37,52 @@ public class ActivityServiceTest : TestBase {
         // arrange
         var dbContext = GetDbContext();
         var service = new ActivityService(dbContext);
-        var input = new AddActivityInput {
+        var input = new SaveActivityInput {
             Description = "Test",
             Start = DateTime.Now,
             End = DateTime.Now.AddHours(1)
         };
-        var result = await service.AddActivityAsync(input);
-        var updateInput = new UpdateActivityInput {
+        var result = await service.SaveActivityAsync(input);
+        var updateInput = new SaveActivityInput {
             Id = result.AddActivity.Id,
             Description = "Test 2",
             Start = DateTime.Now,
             End = DateTime.Now.AddHours(2)
         };
         // act
-        var updateResult = await service.UpdateActivityAsync(updateInput);
+        var updateResult = await service.SaveActivityAsync(updateInput);
         // assert
-        Assert.NotNull(updateResult.UpdateActivity);
-        Assert.Equal(updateInput.Id, updateResult.UpdateActivity.Id);
-        Assert.Equal(updateInput.Description, updateResult.UpdateActivity.Description);
-        Assert.Equal(updateInput.Start, updateResult.UpdateActivity.Start);
-        Assert.Equal(updateInput.End, updateResult.UpdateActivity.End);
+        Assert.NotNull(updateResult.AddActivity);
+        Assert.Equal(updateInput.Id, updateResult.AddActivity.Id);
+        Assert.Equal(updateInput.Description, updateResult.AddActivity.Description);
+        Assert.Equal(updateInput.Start, updateResult.AddActivity.Start);
+        Assert.Equal(updateInput.End, updateResult.AddActivity.End);
+        // assert duration minutes is correct
+        Assert.Equal((int)(updateInput.End - updateInput.Start).Value.TotalMinutes, updateResult.AddActivity.DurationMinutes);
     }
     
+    [Fact]
+    public async Task Error_If_Activity_Start_End_Overlaps_With_Existing() {
+        // arrange
+        var dbContext = GetDbContext();
+        var service = new ActivityService(dbContext);
+        var input = new SaveActivityInput {
+            Description = "Test",
+            Start = DateTime.Now,
+            End = DateTime.Now.AddHours(1)
+        };
+        var result = await service.SaveActivityAsync(input);
+        var updateInput = new SaveActivityInput {
+            Description = "Test 2",
+            Start = DateTime.Now.AddMinutes(-30),
+            End = DateTime.Now.AddHours(2)
+        };
+        // act
+        var updateResult = await service.SaveActivityAsync(updateInput);
+        // assert
+        Assert.NotNull(updateResult.Errors);
+        Assert.Single(updateResult.Errors);
+        Assert.Equal("Activity overlaps with existing activity", updateResult.Errors[0].Message);
+
+    }
 }
