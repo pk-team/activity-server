@@ -2,7 +2,7 @@
 
 var builder = WebApplication.CreateBuilder();
 
-var appSetting = new AppSetting(builder.Configuration);
+var appSetting = new ServerSetting(builder.Configuration);
 
 // services
 builder.Services.AddPooledDbContextFactory<AppDbContext>(
@@ -11,7 +11,8 @@ builder.Services.AddPooledDbContextFactory<AppDbContext>(
         }))
     .AddScoped<AppDbContext>(p => p.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext())
     .AddScoped<SeedDataService>()
-    .AddScoped<CustomQueryService>();
+    .AddScoped<CustomQueryService>()
+    .AddScoped<ActivityService>();
 
 // graphql server
 builder.Services.AddGraphQLServer()
@@ -19,6 +20,7 @@ builder.Services.AddGraphQLServer()
     .AddQueryType<Query>()
         .AddTypeExtension<CustomQuery>()
         .AddTypeExtension<ProjectionQuery>()
+    .AddMutationType<Mutation>()
     .AddProjections()
     .AddFiltering()
     .AddSorting()
@@ -28,6 +30,8 @@ builder.Services.AddGraphQLServer()
 var app = builder.Build();
 
 // endpoints
+
+#region minimal api endpoints
 app.MapGet("/", () => "Timesheet graphql server");
 app.MapPost("/ensure-db", async (AppDbContext context) => {
     if (app.Environment.IsDevelopment()) {
@@ -44,6 +48,7 @@ app.MapPost("/seed-db", async (AppDbContext context, [Service] SeedDataService s
         await service.SeedDatabase();
     }
 });
+#endregion
 
 app.MapGraphQL();
 

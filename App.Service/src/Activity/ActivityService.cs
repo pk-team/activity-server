@@ -18,7 +18,7 @@ public class ActivityService {
         return await _context.Activities.ToListAsync();
     }
 
-    public async Task<AddActivityPayload> SaveActivityAsync(SaveActivityInput input) {
+    public async Task<SaveActivityPayload> SaveActivityAsync(SaveActivityInput input) {
         var activity = await _context.Activities.FindAsync(input.Id);
         if (activity == null) {
             activity = new Activity();
@@ -34,7 +34,7 @@ public class ActivityService {
 
         var validator = new ActivityValidator(_context);
         var validationResult = await validator.ValidateAsync(activity);
-        var payload = new AddActivityPayload {
+        var payload = new SaveActivityPayload {
             Errors = validationResult.Errors.Select(t => new Error {
                 Message = t.ErrorMessage,
                 Path = t.PropertyName.Split('.').ToList()
@@ -52,7 +52,7 @@ public class ActivityService {
         }
         await _context.SaveChangesAsync();
 
-        payload.AddActivity = activity;
+        payload.SaveActivity = activity;
         return payload;
     }
 

@@ -1,9 +1,9 @@
 namespace App.Server;
 
-public class AppSetting {
+public class ServerSetting {
 
     IConfiguration config;
-    public AppSetting(IConfiguration config) {
+    public ServerSetting(IConfiguration config) {
         this.config = config;
     }
 

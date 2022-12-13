@@ -30,11 +30,11 @@ public class ActivityServiceTest : TestBase {
         // act
         var result = await service.SaveActivityAsync(input);
         // assert
-        Assert.NotNull(result.AddActivity);
-        Assert.Equal(input.Description, result.AddActivity.Description);
-        Assert.Equal(input.Start, result.AddActivity.Start);
-        Assert.Equal(input.End, result.AddActivity.End);
-        Assert.Equal(input.OrganizationId, result.AddActivity.OrganizationId);
+        Assert.NotNull(result.SaveActivity);
+        Assert.Equal(input.Description, result.SaveActivity.Description);
+        Assert.Equal(input.Start, result.SaveActivity.Start);
+        Assert.Equal(input.End, result.SaveActivity.End);
+        Assert.Equal(input.OrganizationId, result.SaveActivity.OrganizationId);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class ActivityServiceTest : TestBase {
         };
         var result = await service.SaveActivityAsync(input);
         var updateInput = new SaveActivityInput {
-            Id = result.AddActivity.Id,
+            Id = result.SaveActivity.Id,
             Description = "Test 2",
             Start = DateTime.Now,
             End = DateTime.Now.AddHours(2),
@@ -61,14 +61,14 @@ public class ActivityServiceTest : TestBase {
         // act
         var updateResult = await service.SaveActivityAsync(updateInput);
         // assert
-        Assert.NotNull(updateResult.AddActivity);
-        Assert.Equal(updateInput.Id, updateResult.AddActivity.Id);
-        Assert.Equal(updateInput.Description, updateResult.AddActivity.Description);
-        Assert.Equal(updateInput.Start, updateResult.AddActivity.Start);
-        Assert.Equal(updateInput.End, updateResult.AddActivity.End);
-        Assert.Equal(updateInput.OrganizationId, updateResult.AddActivity.OrganizationId);
+        Assert.NotNull(updateResult.SaveActivity);
+        Assert.Equal(updateInput.Id, updateResult.SaveActivity.Id);
+        Assert.Equal(updateInput.Description, updateResult.SaveActivity.Description);
+        Assert.Equal(updateInput.Start, updateResult.SaveActivity.Start);
+        Assert.Equal(updateInput.End, updateResult.SaveActivity.End);
+        Assert.Equal(updateInput.OrganizationId, updateResult.SaveActivity.OrganizationId);
         // assert duration minutes is correct
-        Assert.Equal((int)(updateInput.End - updateInput.Start).Value.TotalMinutes, updateResult.AddActivity.DurationMinutes);
+        Assert.Equal((int)(updateInput.End - updateInput.Start).Value.TotalMinutes, updateResult.SaveActivity.DurationMinutes);
     }
 
     [Fact]

@@ -29,8 +29,10 @@ public class ActivityValidator : AbstractValidator<Activity> {
                 return start > DateTime.Now.AddYears(-1);
             }).WithMessage("Start date cannot be more than a year in the past");
 
-        RuleFor(t => new { t.Start, t.End }).Must(k => k.End != null && k.End > k.Start)
-            .WithMessage("End date must be after start date");
+        RuleFor(t => new { t.Start, t.End }).Must(
+            k => k.End == null || k.End > k.Start
+        )
+        .WithMessage("End date must be after start date");
 
         // overlapping start end    
         RuleFor(t => new { t.Id, t.Start, t.End }).MustAsync(async (k, cx) => {

@@ -7,14 +7,14 @@
 {
     "AppTitle": "Timesheet",
     "ConnectionStrings": {
-        "Default": "server=localhost,9301;database=timesheet;uid=sa;pwd=DevDevDude119#;MultipleActiveResultSets=True;Encrypt=false;TrustServerCertificate=False;Connection Timeout=30;"
+        "Default": "server=localhost,9301;database=Activity;uid=sa;pwd=DevDevDude119#;MultipleActiveResultSets=True;Encrypt=false;TrustServerCertificate=False;Connection Timeout=30;"
     }
 }
 ```
 ## Run
 
 ```bash
-export ConnectionStrings__Default="server=localhost,9301;database=timesheet;uid=sa;pwd=DevDevDude119#;MultipleActiveResultSets=True;Encrypt=false;TrustServerCertificate=False;Connection Timeout=30;"
+export ConnectionStrings__Default="server=localhost,9301;database=Activity;uid=sa;pwd=DevDevDude119#;MultipleActiveResultSets=True;Encrypt=false;TrustServerCertificate=False;Connection Timeout=30;"
 export AppTitle="Timesheet App"
 export ASPNETCORE_URLS="http://localhost:5200"
 export ASPNETCORE_ENVIRONMENT="Development"
