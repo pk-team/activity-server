@@ -8,4 +8,5 @@ public class SaveOrganizationInput {
     public string Phone { get; set; } = "";
     public string Contact { get; set; } = "";
     public string TaxId { get; set; } = "";
+    public string HexColor { get; set; } = "";
 }

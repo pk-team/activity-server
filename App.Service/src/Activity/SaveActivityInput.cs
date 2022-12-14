@@ -7,5 +7,15 @@ public class SaveActivityInput {
     public DateTimeOffset? End { get; set; }
     public Guid? OrganizationId { get; set; }
 
-    // to activity
+    // To Activity
+    public Activity ToActivity() {
+        return new Activity {
+            Id = Id ?? Guid.NewGuid(),
+            Description = Description,
+            Start = Start,
+            End = End,
+            OrganizationId = OrganizationId
+        };
+    }
+
 }

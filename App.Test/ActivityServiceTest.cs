@@ -115,6 +115,7 @@ public class ActivityServiceTest : TestBase {
         Assert.Equal("Activity not found", result.Errors[0].Message);
     }
 
+    [Fact]
     public async Task Error_If_End_Before_Start() {
         // arrange
         var dbContext = GetDbContext();
@@ -147,5 +148,32 @@ public class ActivityServiceTest : TestBase {
         Assert.NotNull(result.Errors);
         Assert.Single(result.Errors);
         Assert.Equal("Description is required", result.Errors[0].Message);
+    }
+
+    [Fact]
+    public async Task Error_If_Bulk_Save_Activites_Has_Overlapping_Start_End() {
+        var dbContxt = GetDbContext();
+
+        BulkSaveActivitiesInput input = new BulkSaveActivitiesInput {
+            Activities = new List<SaveActivityInput> {
+                new SaveActivityInput {
+                    Description = "Test",
+                    Start = DateTime.Now,
+                    End = DateTime.Now.AddHours(1)
+                },
+                new SaveActivityInput {
+                    Description = "Test 2",
+                    Start = DateTime.Now.AddMinutes(-30),
+                    End = DateTime.Now.AddHours(2)
+                }
+            }
+        };
+
+        var service = new ActivityService(dbContxt);
+        var result = await service.BulkSaveActivitiesAsync(input);
+        
+        Assert.NotNull(result.Errors);
+        // activity overlap error
+        Assert.Single(result.Errors);
     }
 }

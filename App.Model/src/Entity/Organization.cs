@@ -7,7 +7,7 @@ public class Organization : Entity {
     public string Phone { get; set; } = "";
     public string Contact { get; set; } = "";
     public string TaxId { get; set; } = "";
-
+    public string? HexColor { get; set;  } = "";
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Activity> Activities { get; set; } = new List<Activity>();
 }

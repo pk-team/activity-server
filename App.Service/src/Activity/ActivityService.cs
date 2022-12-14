@@ -75,4 +75,36 @@ public class ActivityService {
         await _context.SaveChangesAsync();
         return activity;
     }
+
+    // bulk save activities
+    public async Task<BulkSaveActivitiesPayload> BulkSaveActivitiesAsync(BulkSaveActivitiesInput input) {
+        using var transaction = _context.Database.BeginTransaction();
+
+        var payload = new BulkSaveActivitiesPayload();
+
+        var organization = await _context.Organizations.FirstOrDefaultAsync(t => t.Code == input.OrganizationCode);
+
+        foreach (var item in input.Activities) {
+            item.OrganizationId = organization?.Id;
+
+            var existing = await _context.Activities.FirstOrDefaultAsync(t => t.OrganizationId == item.OrganizationId && t.Start == item.Start && t.End == item.End);
+            if (existing == null) {
+                var savePayload = await SaveActivityAsync(item);
+                payload.Errors.AddRange(savePayload.Errors);
+                // break if errors
+                // if (payload.Errors.Any()) {
+                //     break;
+                // }
+                payload.BulkSaveActivities.Add(savePayload.SaveActivity);
+            }
+        }
+
+        if (payload.Errors.Any()) {
+            await transaction.RollbackAsync();
+            return payload;
+        }
+
+        await transaction.CommitAsync();
+        return payload;
+    }
 }
