@@ -8,6 +8,7 @@ public class AppDbContext : DbContext {
 
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Activity> Activities => Set<Activity>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
 
     public AppDbContext(DbContextOptions options) : base(options) {
 

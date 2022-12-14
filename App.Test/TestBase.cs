@@ -1,5 +1,6 @@
 
 using App.Model;
+using App.Seed;
 using Microsoft.Data.Sqlite;
 
 public class TestBase {
@@ -15,6 +16,10 @@ public class TestBase {
 
         var dbContext = new AppDbContext(options);
         dbContext.Database.EnsureCreated();
+
+        var seedData = new SeedDataService(dbContext);
+        seedData.ClearData();
+
         return dbContext;
         
     }

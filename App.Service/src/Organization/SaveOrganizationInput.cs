@@ -1,13 +1,11 @@
-namespace App.Model;
+namespace App.Service;
 
-public class Organization : Entity {    
+public class SaveOrganizationInput {
+    public Guid? Id { get; set; }
     public string Code { get; set; } = "";
     public string Name { get; set; } = "";
     public string Address { get; set; } = "";
     public string Phone { get; set; } = "";
     public string Contact { get; set; } = "";
     public string TaxId { get; set; } = "";
-
-    public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
-    public ICollection<Activity> Activities { get; set; } = new List<Activity>();
 }

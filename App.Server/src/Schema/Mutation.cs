@@ -7,5 +7,11 @@ namespace App.Server {
             SaveActivityInput input
         ) => await service.SaveActivityAsync(input);
 
+        // SaveOrganizatilnAsync
+        public async Task<SaveOrganizationPayload> SaveOrganizationAsync(
+            [Service] OrganizationService service,
+            SaveOrganizationInput input
+        ) => await service.SaveOrganizationAsync(input);
+        
     }
 }

@@ -19,7 +19,7 @@ public class ActivityServiceTest : TestBase {
     public async Task Can_Add_Activity() {
         // arr
         var dbContext = GetDbContext();
-        var organization = (await new SeedDataService(dbContext).CreateOrganizations(1)).First();
+        var organization = (new SeedDataService(dbContext).CreateOrganizations(1)).First();
         var service = new ActivityService(dbContext);
         var input = new SaveActivityInput {
             Description = "Test",
@@ -41,7 +41,7 @@ public class ActivityServiceTest : TestBase {
     public async Task Can_Update_Activity() {
         // arrange
         var dbContext = GetDbContext();
-        var organizations = await new SeedDataService(dbContext).CreateOrganizations(2);
+        var organizations = new SeedDataService(dbContext).CreateOrganizations(2);
 
         var service = new ActivityService(dbContext);
         var input = new SaveActivityInput {
