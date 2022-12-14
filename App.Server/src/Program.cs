@@ -34,19 +34,29 @@ var app = builder.Build();
 
 #region minimal api endpoints
 app.MapGet("/", () => "Timesheet graphql server");
-app.MapPost("/ensure-db", async (AppDbContext context) => {
+app.MapPost("/create-db", async (AppDbContext context) => {
     if (app.Environment.IsDevelopment()) {
+        await context.Database.EnsureDeletedAsync();
         await context.Database.EnsureCreatedAsync();
     }
 });
-app.MapPost("/ensure-migration", async (AppDbContext context) => {
+
+app.MapPost("/migrate-db", async (AppDbContext context) => {
     await context.Database.MigrateAsync();
 });
+
+app.MapPost("/clear-db", (AppDbContext context, [Service] SeedDataService service) => {
+    if (app.Environment.IsDevelopment()) {
+         service.ClearData();
+    }
+});
+
 app.MapPost("/seed-db", (AppDbContext context, [Service] SeedDataService service) => {
     if (app.Environment.IsDevelopment()) {
          service.ClearAndReseedDatabase();
     }
 });
+
 #endregion
 
 app.MapGraphQL();
